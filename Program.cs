@@ -7,7 +7,16 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+
+
 // Configure the HTTP request pipeline.
+app.MapGet("/health", () => Results.Ok(new 
+{ 
+    status = "Healthy",
+    timestamp = DateTime.UtcNow,
+    service = "MyApp"
+}));
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -35,6 +44,7 @@ app.MapGet("/weatherforecast", () =>
 })
 .WithName("GetWeatherForecast")
 .WithOpenApi();
+
 
 app.Run();
 
