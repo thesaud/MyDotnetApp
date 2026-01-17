@@ -2,61 +2,59 @@ name: .NET CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ master, main, develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ master, main ]
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout code
-      - name: Checkout code
-        uses: actions/checkout@v3
+    # 1. Checkout code
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      # 2. Setup .NET
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '8.0.x'
+    # 2. Setup .NET
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '8.0.x'
 
-      # 3. Restore dependencies
-      - name: Restore dependencies
-        run: dotnet restore MyApp/MyApp.csproj
+    # 3. Restore dependencies
+    - name: Restore dependencies
+      run: dotnet restore MyApp/MyApp.csproj
 
-      # 4. Build project
-      - name: Build
-        run: dotnet build MyApp/MyApp.csproj --configuration Release --no-restore
+    # 4. Build project
+    - name: Build
+      run: dotnet build MyApp/MyApp.csproj --configuration Release --no-restore
 
-      # 5. Run tests
-      - name: Run tests
-        run: dotnet test MyApp/MyApp.csproj --no-restore --verbosity normal
+    # 5. Run tests
+    - name: Run tests
+      run: dotnet test MyApp/MyApp.csproj --no-restore --verbosity normal
 
-      # 6. Publish project
-      - name: Publish
-        run: dotnet publish MyApp/MyApp.csproj -c Release -o ./publish
+    # 6. Publish
+    - name: Publish
+      run: dotnet publish MyApp/MyApp.csproj -c Release -o ./publish
 
-      # 7. Upload artifact (v4)
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: dotnet-app
-          path: ./publish
+    # 7. Upload artifact (اختياري)
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: dotnet-app
+        path: ./publish
 
-      # 8. Build Docker image
-      - name: Build Docker image
-        run: |
-          docker build -f Dockerfile -t ${{ secrets.DOCKER_USERNAME }}/mydotnetapp:latest MyApp
+    # 8. Build Docker image (من جذر المشروع)
+    - name: Build Docker image
+      run: docker build -f Dockerfile -t ${{ secrets.DOCKER_USERNAME }}/mydotnetapp:latest .
 
-      # 9. Login to Docker Hub
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+    # 9. Login to Docker Hub
+    - name: Login to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # 10. Push Docker image
-      - name: Push Docker image
-        run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/mydotnetapp:latest
+    # 10. Push Docker image
+    - name: Push Docker image
+      run: docker push ${{ secrets.DOCKER_USERNAME }}/mydotnetapp:latest
