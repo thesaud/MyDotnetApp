@@ -2,59 +2,59 @@ name: .NET CI/CD Pipeline
 
 on:
   push:
-    branches: [ master, develop ]   # حسب فرعك الحالي
+    branches: [ main, develop ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-    # 1️⃣ Checkout الكود
+    # 1️⃣ تحميل الكود من Repository
     - name: Checkout code
       uses: actions/checkout@v3
 
-    # 2️⃣ Setup .NET SDK
+    # 2️⃣ تثبيت .NET SDK
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: '8.0.x'
 
-    # 3️⃣ Restore dependencies
+    # 3️⃣ تحميل الـ dependencies
     - name: Restore dependencies
       run: dotnet restore MyApp/MyApp.csproj
 
-    # 4️⃣ Build
+    # 4️⃣ بناء المشروع
     - name: Build
       run: dotnet build MyApp/MyApp.csproj --configuration Release --no-restore
 
-    # 5️⃣ Run tests
+    # 5️⃣ تشغيل الاختبارات
     - name: Run tests
       run: dotnet test MyApp/MyApp.csproj --no-restore --verbosity normal
 
-    # 6️⃣ Publish
+    # 6️⃣ تجهيز التطبيق للنشر
     - name: Publish
       run: dotnet publish MyApp/MyApp.csproj -c Release -o ./publish
 
-    # 7️⃣ Upload artifact
+    # 7️⃣ رفع الـ artifacts لو أحببت تخزين نسخة
     - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:
         name: dotnet-app
         path: ./publish
 
-    # 8️⃣ Build Docker image
-    - name: Build Docker image
-      run: docker build -t ${{ secrets.DOCKER_USERNAME }}/mydotnetapp:latest -f MyApp/Dockerfile .
-
-    # 9️⃣ Login to Docker Hub
+    # 8️⃣ تسجيل الدخول لـ Docker Hub
     - name: Login to Docker Hub
       uses: docker/login-action@v2
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
-    # 🔟 Push Docker image
+    # 9️⃣ بناء Docker image
+    - name: Build Docker image
+      run: docker build -f Dockerfile -t ${{ secrets.DOCKER_USERNAME }}/mydotnetapp:latest MyApp
+
+    # 🔟 رفع الـ Docker image
     - name: Push Docker image
       run: docker push ${{ secrets.DOCKER_USERNAME }}/mydotnetapp:latest
